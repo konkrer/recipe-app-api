@@ -161,6 +161,48 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         recipe = Recipe.objects.get(id=res.data['id'])
         ingredients = recipe.ingredients.all()
+
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingred1, ingredients)
         self.assertIn(ingred2, ingredients)
+
+    def test_patch_recipe(self):
+        """Test updating recipe with patch"""
+        recipe = sample_recipe(self.user)
+        recipe.tags.add(sample_tag(self.user))
+        tag = sample_tag(self.user, name='bacon')
+
+        payload = {
+            'title': 'Ham hack',
+            'tags': tag.id
+        }
+        res = self.client.patch(detail_url(recipe.id), payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        recipe.refresh_from_db()
+        serializer = RecipeSerializer(recipe)
+        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(serializer.data['tags'], [payload['tags']])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(tag, tags)
+
+    def test_put_recipe(self):
+        """Test updating recipe with put method"""
+        recipe = sample_recipe(self.user)
+        recipe.tags.add(sample_tag(self.user))
+        payload = {
+            'title': 'Ham hack',
+            'time_minutes': 38,
+            'price': 33.00
+        }
+        res = self.client.put(detail_url(recipe.id), payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        recipe.refresh_from_db()
+        serializer = RecipeSerializer(recipe)
+        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(recipe.title, payload['title'])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 0)
