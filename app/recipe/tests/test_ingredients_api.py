@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient
+from core.models import Ingredient, Recipe
 from recipe.serializers import IngredientSerializer
 
 
@@ -80,3 +80,48 @@ class PrivateIngedientsApiTests(TestCase):
         res = self.client.post(INGREDIENTS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_ingredients_assigned_to_recipe(self):
+        """Test filtering ingredients by those assigned to recipes"""
+        ingredient1 = Ingredient.objects.create(
+            name='broccoli', user=self.user
+        )
+        ingredient2 = Ingredient.objects.create(
+            name='kale', user=self.user
+        )
+        recipe = Recipe.objects.create(
+            title='apple crumble',
+            time_minutes=209,
+            price=38,
+            user=self.user
+        )
+        recipe.ingredients.add(ingredient1)
+
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+
+        serializer1 = IngredientSerializer(ingredient1)
+        serializer2 = IngredientSerializer(ingredient2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_ingredient_assigned_unique(self):
+        """Test filter ingredients by assigned returns unique items"""
+        ingredient = Ingredient.objects.create(user=self.user, name='turkey')
+        Ingredient.objects.create(user=self.user, name='bok choi')
+        recipe1 = Recipe.objects.create(
+            title='eggs benny',
+            time_minutes=3,
+            price=3,
+            user=self.user
+        )
+        recipe1.ingredients.add(ingredient)
+        recipe2 = Recipe.objects.create(
+            title='turkey ham',
+            time_minutes=5,
+            price=6.66,
+            user=self.user
+        )
+        recipe2.ingredients.add(ingredient)
+
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+        self.assertEqual(len(res.data), 1)
