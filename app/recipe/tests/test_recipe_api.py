@@ -263,19 +263,19 @@ class RecipeImageUploadTests(TestCase):
 
         res = self.client.get(
             RECIPE_URL,
-            {'tags': f'{tag1.id},{tag2.id}}'
+            {'tags': f'{tag1.id},{tag2.id}'}
         )
-         serializer1 = RecipeSerializer(recipe1)
-         serializer2 = RecipeSerializer(recipe2)
-         serializer3 = RecipeSerializer(recipe3)
-         self.assertIn(serializer1.data, res.data)
-         self.assertIn(serializer2.data, res.data)
-         self.assertNotIn(serializer3.data, res.data)
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
 
     def test_filter_recipes_by_ingredients(self):
         """Test returning recipes with specific ingredients"""
         recipe1 = sample_recipe(self.user, title='Waxy box')
-        recipe2 = sample_recipe(self.user , title='Waxy noodle beans')
+        recipe2 = sample_recipe(self.user, title='Waxy noodle beans')
         ingredient1 = sample_ingredient(self.user, name='box')
         ingredient2 = sample_ingredient(self.user, name='Wet noodle')
         recipe1.ingredients.add(ingredient1)
@@ -284,11 +284,11 @@ class RecipeImageUploadTests(TestCase):
 
         res = self.client.get(
             RECIPE_URL,
-            {'ingredients': f'{ingedient1},{ingredient2}'}
+            {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
         )
         serializer1 = RecipeSerializer(recipe1)
         serializer2 = RecipeSerializer(recipe2)
         serializer3 = RecipeSerializer(recipe3)
-        self.asserIn(serializer1, res.data)
-        self.asserIn(serializer2, res.data)
-        self.assertNotIn(serializer3, res.data)
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
